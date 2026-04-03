@@ -5,6 +5,7 @@ I created this project to practice database management using SQLAlchemy and Fast
 ## Step 1: Setting up the environment
 
 I created a virtual environment to manage dependencies.
+
 ```bash
 python -m venv venv
 venv\Scripts\activate
@@ -14,6 +15,7 @@ pip install -r requirements.txt
 ## Step 2: Setting up the database
 
 I created a database using PostgreSQL.
+
 ```bash
 CREATE DATABASE postgres;
 ```
@@ -21,6 +23,7 @@ CREATE DATABASE postgres;
 ## Step 3: Setting up the database connection
 
 I created a database connection using SQLAlchemy.
+
 ```python
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -32,6 +35,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 ## Step 4: Creating the User model
 
 I created a User model using SQLAlchemy.
+
 ```python
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
@@ -50,7 +54,9 @@ class Product(Base):
     name = Column(String)
     price = Column(Integer)
 ```
+
 ## Step 5: Alembic
+
 I used alembic to manage the database migrations.
 First I initialized alembic.
 ```bash
