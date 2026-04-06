@@ -19,7 +19,11 @@ def get_db():
     finally:
         db.close()
 
-@app.post("/users")
+@app.get("/users")
+def read_users(db: Session = Depends(get_db)):
+    return db.query(User).all()
+
+@app.post("/create_users")
 def create_user(user: UserBase , db: Session = Depends(get_db)):
     db_user = User(
         first_name=user.first_name, 
@@ -31,3 +35,11 @@ def create_user(user: UserBase , db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+@app.get("/users/{id}")
+def read_user(id: int , db: Session = Depends(get_db)):
+    student = db.query(User).filter(User.id == id).first()
+    if not student:
+        raise HTTPException(status_code=404 , detail="User not found")
+    return student
+    
