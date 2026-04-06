@@ -42,4 +42,12 @@ def read_user(id: int , db: Session = Depends(get_db)):
     if not student:
         raise HTTPException(status_code=404 , detail="User not found")
     return student
-    
+
+@app.delete("/users/{id}")
+def delete_user(id: int , db: Session = Depends(get_db)):
+    student = db.query(User).filter(User.id == id).first()
+    if not student:
+        raise HTTPException(status_code=404 , detail="User not found")
+    db.delete(student)
+    db.commit()
+    return {"message": "User deleted successfully"}
