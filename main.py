@@ -36,18 +36,16 @@ def create_user(user: UserBase , db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
-@app.get("/users/{id}")
+@app.get("/users/{user_id}")
 def read_user(id: int , db: Session = Depends(get_db)):
     student = db.query(User).filter(User.id == id).first()
     if not student:
         raise HTTPException(status_code=404 , detail="User not found")
     return student
 
-@app.delete("/users/{id}")
+@app.delete("/users/{user_id}")
 def delete_user(id: int , db: Session = Depends(get_db)):
-    student = db.query(User).filter(User.id == id).first()
+    student = db.query(User).filter(User.id == user_id).first()
     if not student:
         raise HTTPException(status_code=404 , detail="User not found")
-    db.delete(student)
-    db.commit()
-    return {"message": "User deleted successfully"}
+    return {"message":"User deleted successfully"}
