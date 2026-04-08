@@ -71,3 +71,20 @@ def update_user(id:int , user:UpdateUser , db:Session = Depends(get_db)):
     db.commit()
     db.refresh(student)
     return {"message":"User updated successfully"}
+
+@app.patch("/update_user/{user_id}")
+def update_user(id:int , user:UpdateUser , db:Session = Depends(get_db)):
+    student = db.query(User).filter(User.id == id).first()
+    if not student:
+        raise HTTPException(status_code=404 , detail="User not found")
+    if user.first_name:
+        student.first_name = user.first_name
+    if user.last_name:
+        student.last_name = user.last_name
+    if user.age:
+        student.age = user.age
+    if user.email:
+        student.email = user.email
+    db.commit()
+    db.refresh(student)
+    return {"message":"User updated successfully"}
