@@ -1,23 +1,32 @@
-from fastapi import FastAPI , Depends , HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import User
-from typing import Optional
-from pydantic import BaseModel
+from typing import Optional, List
+from pydantic import BaseModel, EmailStr
 
 app = FastAPI()
+
 
 class UserBase(BaseModel):
     first_name: str
     last_name: str
     age: int
-    email: str
+    email: EmailStr  
 
 class UpdateUser(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     age: Optional[int] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
+
+
+class UserResponse(UserBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
 
 def get_db():
     db = SessionLocal()
@@ -26,65 +35,97 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/users")
-def read_users(db: Session = Depends(get_db)):
-    return db.query(User).all()
 
-@app.post("/create_users")
-def create_user(user: UserBase , db: Session = Depends(get_db)):
-    db_user = User(
-        first_name=user.first_name, 
-        last_name=user.last_name,
-        age=user.age,
-        email=user.email
-    ) 
+@app.post("/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def create_user(user: UserBase, db: Session = Depends(get_db)):
+    
+    existing_user = db.query(User).filter(User.email == user.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already exists")
+
+    db_user = User(**user.dict())
+
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+
     return db_user
 
-@app.get("/users/{user_id}")
-def read_user(id: int , db: Session = Depends(get_db)):
-    student = db.query(User).filter(User.id == id).first()
-    if not student:
-        raise HTTPException(status_code=404 , detail="User not found")
-    return student
 
-@app.delete("/delete_user/{user_id}")
-def delete_user(id: int , db: Session = Depends(get_db)):
-    student = db.query(User).filter(User.id == id).first()
-    if not student:
-        raise HTTPException(status_code=404 , detail="User not found")
-    db.delete(student)
-    db.commit()
-    return {"message":"User deleted successfully"}
 
-@app.put("/update_user/{user_id}")
-def update_user(id:int , user:UpdateUser , db:Session = Depends(get_db)):
-    student = db.query(User).filter(User.id == id).first()
-    if not student:
-        raise HTTPException(status_code=404 , detail="User not found")
-    student.first_name = user.first_name
-    student.last_name = user.last_name
-    student.age = user.age
-    student.email = user.email
-    db.commit()
-    db.refresh(student)
-    return {"message":"User updated successfully"}
+@app.get("/users", response_model=List[UserResponse])
+def get_users(db: Session = Depends(get_db)):
+    return db.query(User).all()
 
-@app.patch("/update_user/{user_id}")
-def update_user(id:int , user:UpdateUser , db:Session = Depends(get_db)):
-    student = db.query(User).filter(User.id == id).first()
-    if not student:
-        raise HTTPException(status_code=404 , detail="User not found")
-    if user.first_name:
-        student.first_name = user.first_name
-    if user.last_name:
-        student.last_name = user.last_name
-    if user.age:
-        student.age = user.age
-    if user.email:
-        student.email = user.email
+
+
+@app.get("/users/{user_id}", response_model=UserResponse)
+def get_user(user_id: int, db: Session = Depends(get_db)):
+    
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return user
+
+
+
+@app.delete("/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    db.delete(user)
     db.commit()
-    db.refresh(student)
-    return {"message":"User updated successfully"}
+
+    return {"message": "User deleted successfully"}
+
+
+@app.put("/users/{user_id}", response_model=UserResponse)
+def update_user(user_id: int, user: UpdateUser, db: Session = Depends(get_db)):
+
+    db_user = db.query(User).filter(User.id == user_id).first()
+
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if user.first_name is not None:
+        db_user.first_name = user.first_name
+    if user.last_name is not None:
+        db_user.last_name = user.last_name
+    if user.age is not None:
+        db_user.age = user.age
+    if user.email is not None:
+        db_user.email = user.email
+
+    db.commit()
+    db.refresh(db_user)
+
+    return db_user
+
+
+@app.patch("/users/{user_id}", response_model=UserResponse)
+def patch_user(user_id: int, user: UpdateUser, db: Session = Depends(get_db)):
+
+    db_user = db.query(User).filter(User.id == user_id).first()
+
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if user.first_name is not None:
+        db_user.first_name = user.first_name
+    if user.last_name is not None:
+        db_user.last_name = user.last_name
+    if user.age is not None:
+        db_user.age = user.age
+    if user.email is not None:
+        db_user.email = user.email
+
+    db.commit()
+    db.refresh(db_user)
+
+    return db_user
