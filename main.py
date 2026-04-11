@@ -39,6 +39,7 @@ def get_db():
 def home():
     return {"message": "Home"}
 
+# Create a new user
 @app.post("/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(user: UserBase, db: Session = Depends(get_db)):
     
@@ -55,13 +56,13 @@ def create_user(user: UserBase, db: Session = Depends(get_db)):
     return db_user
 
 
-
+# Get all users
 @app.get("/users", response_model=List[UserResponse])
 def get_users(db: Session = Depends(get_db)):
     return db.query(User).all()
 
 
-
+# Get a single user
 @app.get("/users/{user_id}", response_model=UserResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     
@@ -73,7 +74,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     return user
 
 
-
+# Delete a user
 @app.delete("/users/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     
@@ -88,6 +89,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     return {"message": "User deleted successfully"}
 
 
+# Update a user
 @app.put("/users/{user_id}", response_model=UserResponse)
 def update_user(user_id: int, user: UpdateUser, db: Session = Depends(get_db)):
 
@@ -111,6 +113,7 @@ def update_user(user_id: int, user: UpdateUser, db: Session = Depends(get_db)):
     return db_user
 
 
+# Partial update of a user
 @app.patch("/users/{user_id}", response_model=UserResponse)
 def patch_user(user_id: int, user: UpdateUser, db: Session = Depends(get_db)):
 
